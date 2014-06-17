@@ -6,7 +6,7 @@ Cookieville - REST API for your database
 
 =head1 VERSION
 
-0.01
+0.02
 
 =head1 DESCRIPTION
 
@@ -35,6 +35,25 @@ Connection arguments will be read from C<$HOME/.cookieville>. Example:
   }
 
 TIP: Give C<.cookieville> the file mode 0600 to protect your passwords.
+
+It is also possible to specify config file using the C<MOJO_CONFIG>
+environment variable. This is also useful for setting up
+L<hypnotoad|Mojo::Server::Hypnotoad>:
+
+  $ cat some_config.conf
+  {
+    inactive_timeout => 10,
+    schema_class => 'My::Schema',
+    connect_args => {
+      'DBI:mysql:database=some_database;host=localhost',
+      'dr_who',
+      'MostS3cretpassWord',
+    },
+    hypnotoad => {
+      listen => [ 'http://*:5000 ],
+      workers => 10,
+    },
+  }
 
 =head1 RESOURCES
 
@@ -71,12 +90,39 @@ Returns a list of available sources (resultsets). Example:
 
 Returns the schema for the given C<source>.
 
-=item * GET /:source/search?q=:json&limit=:int&page=:int&order_by=:json
+=item * GET /:source/search
 
-Does a SELECT from the given C<source>. C<q> will be L<deserialized|Mojo::JSON/decode>
-and used as the L<query part|/Queries>.
+Does a SELECT from the given C<source> with a given set of query params:
 
-C<limit>, C<page> and C<order_by> are optional.
+=over 4
+
+=item * q=:json (mandatory)
+
+C<q> will be L<deserialized|Mojo::JSON/decode> and used as the
+L<query part|/Queries>.
+
+=item * columns=:json (optional)
+
+Only output the given columns. Example:
+
+  columns=["id","name"]
+
+=item * limit=:int (optional)
+
+Used to limit the number of rows in the output.
+
+=item * page=:int (optional)
+
+Used for pagination when C<limit> is specified.
+
+=item * order_by=:json (optional)
+
+Sort the result by column(s). Examples:
+
+  order_by={"-desc","name"}
+  order_by=["name","id"]
+
+=back
 
 The return value will be a JSON document containing the rows. Example:
 
@@ -184,9 +230,17 @@ use Mojo::Base 'Mojolicious';
 use File::HomeDir ();
 use File::Spec ();
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 ATTRIBUTES
+
+=head2 inactive_timeout
+
+  $int = $self->inactive_timeout;
+
+Used to set the number of seconds before a query agains the database time out.
+Defaults to value from config, the environment variable
+C<COOKIEVILLE_INACTIVE_TIMEOUT> or 10 seconds.
 
 =head2 connect_args
 
@@ -204,11 +258,16 @@ the environment variable C<COOKIEVILLE_SCHEMA>.
 
 =cut
 
+has inactive_timeout => sub {
+  $ENV{COOKIEVILLE_INACTIVE_TIMEOUT} || shift->config('inactive_timeout') || 10;
+};
+
 has connect_args => sub {
   my $self = shift;
   my $config_file = File::Spec->catfile(File::HomeDir->my_home, '.cookieville');
 
   unless(-r $config_file) {
+    return $self->config('connect_args') if $self->config('connect_args');
     $self->log->debug("Could not read $config_file");
     return [];
   }
@@ -218,7 +277,9 @@ has connect_args => sub {
   return $config_file->{$self->schema_class} || [];
 };
 
-has schema_class => sub { $ENV{COOKIEVILLE_SCHEMA} || '' };
+has schema_class => sub {
+  $ENV{COOKIEVILLE_SCHEMA} || shift->config('schema_class') || '';
+};
 
 =head1 HELPERS
 
@@ -258,9 +319,17 @@ Will set up L</RESOURCES> and add L</HELPERS>.
 sub startup {
   my $self = shift;
 
+  if ($ENV{MOJO_CONFIG}) {
+    $self->plugin('config');
+  }
   if (my $schema_class = $self->schema_class) {
     eval "require $schema_class;1" or die $@;
   }
+
+  $self->hook(before_dispatch => sub {
+    my $c = shift;
+    Mojo::IOLoop->stream($c->tx->connection)->timeout($self->inactive_timeout);
+  });
 
   push @{ $self->renderer->classes }, __PACKAGE__;
   $self->defaults(format => 'json', message => '');

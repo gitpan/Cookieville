@@ -1,5 +1,10 @@
 Revision history for Cookieville
 
+0.02     Tue Jun 17 22:24:55 2014
+       * Add support for reading MOJO_CONFIG
+       * Add support for "columns" in GET /:source/search?q=:json&columns=["foo"]
+       * Add support for custom inactivity timeout
+
 0.01     Tue Jun 17 20:22:33 2014
        * EXPERIMENTAL release
        * Add resource for GET /

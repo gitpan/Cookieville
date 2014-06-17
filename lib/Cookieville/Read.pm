@@ -40,8 +40,10 @@ sub search {
   $extra{order_by} = j $self->param('order_by') if $self->param('order_by');
   $extra{page} = $self->param('page') if $self->param('page');
   $extra{rows} = $self->param('limit') if $self->param('limit');
+  $extra{columns} = j $self->param('columns') if $self->param('columns');
 
-  $self->stash(rs => $rs->search_rs($q, \%extra))->respond_to(
+  $self->stash(extra => \%extra, rs => $rs->search_rs($q, \%extra));
+  $self->respond_to(
     csv => \&_search_as_csv,
     txt => \&_search_as_csv,
     any => \&_search_as_json,
@@ -51,8 +53,17 @@ sub search {
 sub _search_as_csv {
   my $self = shift;
   my $rs = $self->stash('rs');
-  my @columns = $rs->result_source->columns;
-  my @csv = (join ',', @columns);
+  my @columns;
+  my @csv;
+
+  if (my $columns = $self->stash('extra')->{columns}) {
+    @columns = @$columns;
+  }
+  else {
+    @columns = $rs->result_source->columns;
+  }
+
+  push @csv, join ',', @columns;
 
   while(my $row = $rs->next) {
     push @csv, join ',', map {

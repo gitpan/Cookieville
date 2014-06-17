@@ -2,7 +2,7 @@ NAME
     Cookieville - REST API for your database
 
 VERSION
-    0.01
+    0.02
 
 DESCRIPTION
     Cookieville is a a web application which allow you to inspect and run
@@ -30,6 +30,24 @@ SYNOPSIS
       }
 
     TIP: Give ".cookieville" the file mode 0600 to protect your passwords.
+
+    It is also possible to specify config file using the "MOJO_CONFIG"
+    environment variable. This is also useful for setting up hypnotoad:
+
+      $ cat some_config.conf
+      {
+        inactive_timeout => 10,
+        schema_class => 'My::Schema',
+        connect_args => {
+          'DBI:mysql:database=some_database;host=localhost',
+          'dr_who',
+          'MostS3cretpassWord',
+        },
+        hypnotoad => {
+          listen => [ 'http://*:5000 ],
+          workers => 10,
+        },
+      }
 
 RESOURCES
     *   GET /
@@ -64,12 +82,35 @@ RESOURCES
 
         Returns the schema for the given "source".
 
-    *   GET /:source/search?q=:json&limit=:int&page=:int&order_by=:json
+    *   GET /:source/search
 
-        Does a SELECT from the given "source". "q" will be deserialized and
-        used as the query part.
+        Does a SELECT from the given "source" with a given set of query
+        params:
 
-        "limit", "page" and "order_by" are optional.
+        *   q=:json (mandatory)
+
+            "q" will be deserialized and used as the query part.
+
+        *   columns=:json (optional)
+
+            Only output the given columns. Example:
+
+              columns=["id","name"]
+
+        *   limit=:int (optional)
+
+            Used to limit the number of rows in the output.
+
+        *   page=:int (optional)
+
+            Used for pagination when "limit" is specified.
+
+        *   order_by=:json (optional)
+
+            Sort the result by column(s). Examples:
+
+              order_by={"-desc","name"}
+              order_by=["name","id"]
 
         The return value will be a JSON document containing the rows.
         Example:
@@ -169,6 +210,13 @@ RESOURCES
     on as the first argument to "search" in DBIx::Class.
 
 ATTRIBUTES
+  inactive_timeout
+      $int = $self->inactive_timeout;
+
+    Used to set the number of seconds before a query agains the database
+    time out. Defaults to value from config, the environment variable
+    "COOKIEVILLE_INACTIVE_TIMEOUT" or 10 seconds.
+
   connect_args
       $array_ref = $self->connect_args;
 
