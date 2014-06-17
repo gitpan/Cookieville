@@ -1,0 +1,11 @@
+Revision history for Cookieville
+
+0.01     Tue Jun 17 20:22:33 2014
+       * EXPERIMENTAL release
+       * Add resource for GET /
+       * Add resource for GET /sources
+       * Add resource for GET /:source/schema
+       * Add resource for GET /:source/search?q=:json&limit=:int&page=:int&order_by=:json
+       * Add resource for DELETE /:source/:id
+       * Add resource for PATCH /:source/:id
+       * Add resource for PUT /:source

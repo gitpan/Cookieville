@@ -1,0 +1,30 @@
+---
+abstract: 'REST API for your database'
+author:
+  - 'Jan Henning Thorsen <jhthorsen@cpan.org>'
+build_requires:
+  DBD::SQLite: 1.00
+  SQL::Translator: 0.11016
+  Test::More: 0.90
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Cookieville
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  DBIx::Class: 0.08
+  Mojolicious: 4.03
+resources:
+  bugtracker: https://github.com/jhthorsen/cookieville/issues
+  homepage: https://metacpan.org/release/Cookieville
+  license: http://dev.perl.org/licenses/
+  repository: https://github.com/jhthorsen/cookieville.git
+version: 0.01
