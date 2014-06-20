@@ -6,7 +6,7 @@ Cookieville - REST API for your database
 
 =head1 VERSION
 
-0.04
+0.05
 
 =head1 DESCRIPTION
 
@@ -32,17 +32,23 @@ Example C<MOJO_CONFIG>:
   {
     # config for cookieville
     inactive_timeout => 10,
-    schema_class => 'My::Schema',
+    schema_class => "My::Schema",
     connect_args => {
-      'DBI:mysql:database=some_database;host=localhost',
-      'dr_who',
-      'MostS3cretpassWord',
+      "DBI:mysql:database=some_database;host=localhost",
+      "dr_who",
+      "MostS3cretpassWord",
     },
 
     # config for hypnotoad - https://metacpan.org/pod/Mojo::Server::Hypnotoad
     hypnotoad => {
-      listen => [ 'http://*:5000 ],
+      listen => [ "http://*:5000" ],
       workers => 10,
+    },
+
+    # will set up logging to a given file
+    log => {
+      path => "/path/to/cookieville.log",
+      level => "info", # or debug
     },
   }
 
@@ -228,7 +234,7 @@ the first argument to L<DBIx::Class/search>.
 use Mojo::Base 'Mojolicious';
 use File::Spec ();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 ATTRIBUTES
 
@@ -288,7 +294,12 @@ sub setup_routes {
   my $self = shift;
   my $r = $self->routes;
 
-  $r->get('/')->to('schema#index')->name('cookieville') unless $r->find('cookieville');
+  if (my $rules = $self->config('access_rules')) {
+    $self->plugin('Cookieville::Plugin::Authorize', $rules);
+    $r = $r->find('cookieville_authorizer');
+  }
+
+  $self->routes->get('/')->to('schema#index')->name('cookieville') unless $r->find('cookieville');
   $r->get('/sources')->to('schema#sources_list')->name('schema_source_list') unless $r->find('schema_source_list');
   $r->get('/:source/schema')->to('schema#source_schema')->name('schema_for_source') unless $r->find('schema_for_source');
   $r->get('/:source/search')->to('read#search')->name('source_search') unless $r->find('source_search');
@@ -308,6 +319,13 @@ sub startup {
 
   if ($ENV{MOJO_CONFIG}) {
     $self->plugin('config');
+  }
+  if (my $config = $self->config('log')) {
+    $config->{$_} and $self->log->$_($config->{$_}) for qw( level path );
+    delete $self->log->{handle};
+  }
+  if (my $config = $self->config('access_log')) {
+    $self->plugin('Cookieville::Plugin::AccessLog', $config);
   }
   if (my $schema_class = $self->schema_class) {
     eval "require $schema_class;1" or die $@;
@@ -342,6 +360,12 @@ Jan Henning Thorsen - C<jhthorsen@cpan.org>
 1;
 
 __DATA__
+@@ not_authorized.json.ep
+%== j { message => $message || 'Not authorized.' }
+@@ not_authorized.csv.ep
+%= $message || 'Not authorized.'
+@@ not_authorized.txt.ep
+%= $message || 'Not authorized.'
 @@ not_found.csv.ep
 %= $message || 'Not found.'
 @@ not_found.json.ep

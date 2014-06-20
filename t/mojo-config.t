@@ -3,8 +3,9 @@ use Test::Mojo;
 use Test::More;
 use Cookieville;
 
-plan skip_all => 'Could not read t/mojo.conf' unless -r 't/mojo.conf';
 $ENV{MOJO_CONFIG} = 't/mojo.conf';
+
+plan skip_all => 'Cannot read MOJO_CONFIG' unless -r $ENV{MOJO_CONFIG};
 
 my $t = Test::Mojo->new(Cookieville->new);
 

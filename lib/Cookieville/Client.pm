@@ -53,8 +53,19 @@ use Mojo::Base -base;
 use Mojo::JSON 'j';
 use Mojo::UserAgent;
 use Mojo::URL;
+use Carp ();
 
 =head1 ATTRIBUTES
+
+=head2 id
+
+  $str = $self->id;
+  $self = $self->id($str);
+
+Used to set the "X-Cookieville-Auth-Id" HTTP header. This can be used by the
+L<Cookieville::Plugin::Authorize> plugin.
+
+Defaults to C<COOKIEVILLE_AUTH_ID> environment variable.
 
 =head2 url
 
@@ -66,6 +77,7 @@ Default to "http://127.0.0.1/".
 
 =cut
 
+has id => $ENV{COOKIEVILLE_AUTH_ID} || '';
 has url => sub { Mojo::URL->new('http://127.0.0.1/'); };
 has _ua => sub { Mojo::UserAgent->new; };
 
@@ -102,6 +114,7 @@ sub delete {
   Scalar::Util::weaken($self);
   $self->_ua->delete(
     $self->_url("/$source/$id"),
+    { 'X-Cookieville-Auth-Id' => $self->id },
     sub { $self->$cb($self->_res_from_tx($_[1])); },
   );
 
@@ -128,6 +141,7 @@ sub patch {
   Scalar::Util::weaken($self);
   $self->_ua->patch(
     $self->_url("/$source/$id"),
+    { 'X-Cookieville-Auth-Id' => $self->id },
     j($data),
     sub { $self->$cb($self->_res_from_tx($_[1])); },
   );
@@ -160,6 +174,7 @@ sub put {
   Scalar::Util::weaken($self);
   $self->_ua->put(
     $self->_url("/$source"),
+    { 'X-Cookieville-Auth-Id' => $self->id },
     j($data),
     sub { $self->$cb($self->_res_from_tx($_[1])); },
   );
@@ -225,6 +240,7 @@ sub search {
   Scalar::Util::weaken($self);
   $self->_ua->get(
     $self->_url("/$source/search")->query($extra),
+    { 'X-Cookieville-Auth-Id' => $self->id },
     sub { $self->$cb($self->_res_from_tx($_[1])); },
   );
 
@@ -242,7 +258,7 @@ sub _blocking {
   });
 
   $self->_ua->ioloop->start;
-  die $err if $err;
+  Carp::confess($err) if $err;
   return $res;
 }
 

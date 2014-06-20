@@ -1,5 +1,10 @@
 Revision history for Cookieville
 
+0.05     Fri Jun 20 15:07:48 2014
+       * Add Cookieville::Plugin::AccessLog
+       * Add Cookieville::Plugin::Authorize
+       * Add support for "log" in MOJO_CONFIG
+
 0.04     Fri Jun 20 09:24:38 2014
        * Add Cookieville::Client to the main Cookieville documentation
        * Remove support for reading $HOME/.cookieville config

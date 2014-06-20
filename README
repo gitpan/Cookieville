@@ -2,7 +2,7 @@ NAME
     Cookieville - REST API for your database
 
 VERSION
-    0.04
+    0.05
 
 DESCRIPTION
     Cookieville is a a web application which allow you to inspect and run
@@ -27,17 +27,23 @@ SYNOPSIS
       {
         # config for cookieville
         inactive_timeout => 10,
-        schema_class => 'My::Schema',
+        schema_class => "My::Schema",
         connect_args => {
-          'DBI:mysql:database=some_database;host=localhost',
-          'dr_who',
-          'MostS3cretpassWord',
+          "DBI:mysql:database=some_database;host=localhost",
+          "dr_who",
+          "MostS3cretpassWord",
         },
 
         # config for hypnotoad - https://metacpan.org/pod/Mojo::Server::Hypnotoad
         hypnotoad => {
-          listen => [ 'http://*:5000 ],
+          listen => [ "http://*:5000" ],
           workers => 10,
+        },
+
+        # will set up logging to a given file
+        log => {
+          path => "/path/to/cookieville.log",
+          level => "info", # or debug
         },
       }
 

@@ -35,7 +35,8 @@
       "runtime" : {
          "requires" : {
             "DBIx::Class" : "0.08",
-            "Mojolicious" : "4.03"
+            "Mojolicious" : "4.03",
+            "Time::HiRes" : "1.90"
          }
       }
    },
@@ -52,5 +53,5 @@
          "url" : "https://github.com/jhthorsen/cookieville.git"
       }
    },
-   "version" : "0.04"
+   "version" : "0.05"
 }

@@ -22,9 +22,10 @@ no_index:
 requires:
   DBIx::Class: 0.08
   Mojolicious: 4.03
+  Time::HiRes: 1.90
 resources:
   bugtracker: https://github.com/jhthorsen/cookieville/issues
   homepage: https://metacpan.org/release/Cookieville
   license: http://dev.perl.org/licenses/
   repository: https://github.com/jhthorsen/cookieville.git
-version: 0.04
+version: 0.05

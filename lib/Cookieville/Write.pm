@@ -54,7 +54,7 @@ sub patch {
   $row = $rs->find($self->stash('id'));
 
   unless ($row) {
-    return $self->render(json => { message => qq(No such record in "$source" source.) }, status => 404);
+    return $self->render(json => { message => qq(No such record in $source source.) }, status => 404);
   }
 
   $row->set_column($_ => $data->{$_}) for keys %$data;

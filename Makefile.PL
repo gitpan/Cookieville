@@ -6,8 +6,9 @@ WriteMakefile(
   AUTHOR => 'Jan Henning Thorsen <jhthorsen@cpan.org>',
   LICENSE => 'perl',
   PREREQ_PM => {
-    'Mojolicious' => '4.03',
     'DBIx::Class' => '0.08',
+    'Mojolicious' => '4.03',
+    'Time::HiRes' => '1.90',
   },
   BUILD_REQUIRES => {
     'DBD::SQLite' => '1.00',
