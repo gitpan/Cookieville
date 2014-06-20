@@ -2,7 +2,7 @@ NAME
     Cookieville - REST API for your database
 
 VERSION
-    0.02
+    0.03
 
 DESCRIPTION
     Cookieville is a a web application which allow you to inspect and run
@@ -133,7 +133,7 @@ RESOURCES
 
     *   DELETE /:source/:id
 
-        Used to DELETE a single row identified by "id".
+        Used to DELETE a single record identified by "id".
 
         The return value will be a JSON document with the number of rows
         deleted:

@@ -6,7 +6,7 @@ Cookieville - REST API for your database
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 DESCRIPTION
 
@@ -143,7 +143,7 @@ also supported. Example:
 
 =item * DELETE /:source/:id
 
-Used to DELETE a single row identified by C<id>.
+Used to DELETE a single record identified by C<id>.
 
 The return value will be a JSON document with the number of rows deleted:
 
@@ -230,7 +230,7 @@ use Mojo::Base 'Mojolicious';
 use File::HomeDir ();
 use File::Spec ();
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 ATTRIBUTES
 

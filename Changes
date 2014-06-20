@@ -1,5 +1,11 @@
 Revision history for Cookieville
 
+0.03     Fri Jun 20 09:08:11 2014
+       * Add Cookieville::Client
+       * Fix PUT /:source on UPDATE
+       * Change PUT /:source will INSERT when no unique constraints are found
+       * Change "inserted" in PUT /:source result to an integer: 0 or 1.
+
 0.02     Tue Jun 17 22:24:55 2014
        * Add support for reading MOJO_CONFIG
        * Add support for "columns" in GET /:source/search?q=:json&columns=["foo"]

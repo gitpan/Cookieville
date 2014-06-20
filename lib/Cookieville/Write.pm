@@ -81,17 +81,21 @@ sub update_or_insert {
   unless ($rs) {
     return $self->render(json => { message => 'No source by that name.' }, status => 404);
   }
-  unless ($self->_can_find($data, $rs->result_source)) {
-    return $self->render(json => { message => qq(JSON body need keys matching at least one unique constraint in "$source".) }, status => 400);
+
+  if ($self->_can_find($data, $rs->result_source)) {
+    $row = $rs->find_or_new($data);
+    $in_storage = $row->in_storage;
+    $row->in_storage ? $row->update($data) : $row->insert;
+  }
+  else {
+    $row = $rs->create($data);
+    $row->discard_changes;
+    $in_storage = 0;
   }
 
-  $row = $rs->find_or_new($data);
-  $in_storage = $row->in_storage;
-
-  $row->update_or_insert;
   $self->render(
     json => {
-      inserted => $in_storage ? Mojo::JSON->false : Mojo::JSON->true,
+      inserted => $in_storage ? 0 : 1,
       data => { $row->get_columns },
     },
   );
