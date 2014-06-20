@@ -1,5 +1,10 @@
 Revision history for Cookieville
 
+0.04     Fri Jun 20 09:24:38 2014
+       * Add Cookieville::Client to the main Cookieville documentation
+       * Remove support for reading $HOME/.cookieville config
+       * Remove File::HomeDir dependency
+
 0.03     Fri Jun 20 09:08:11 2014
        * Add Cookieville::Client
        * Fix PUT /:source on UPDATE

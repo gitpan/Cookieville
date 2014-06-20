@@ -2,11 +2,14 @@ NAME
     Cookieville - REST API for your database
 
 VERSION
-    0.03
+    0.04
 
 DESCRIPTION
     Cookieville is a a web application which allow you to inspect and run
     queries on your SQL database using a REST interface.
+
+    This distribution also contain Cookieville::Client for easy blocking and
+    non-blocking integration with the server.
 
     This application need a DBIx::Class based schema to work. It will query
     the result files on disk to gather meta information about the schema
@@ -16,26 +19,13 @@ DESCRIPTION
     NOTICE.
 
 SYNOPSIS
-      $ COOKIEVILLE_SCHEMA="My::Schema" cookieville daemon --listen http://*:5000
+      $ MOJO_CONFIG=/path/to/mojo.conf cookieville daemon --listen http://*:5000
 
-    Connection arguments will be read from "$HOME/.cookieville". Example:
+    Example "MOJO_CONFIG":
 
-      $ cat $HOME/.cookieville
+      $ cat /path/to/mojo.conf
       {
-        'My::Schema' => [
-          'DBI:mysql:database=some_database;host=localhost',
-          'dr_who',
-          'MostS3cretpassWord',
-        ],
-      }
-
-    TIP: Give ".cookieville" the file mode 0600 to protect your passwords.
-
-    It is also possible to specify config file using the "MOJO_CONFIG"
-    environment variable. This is also useful for setting up hypnotoad:
-
-      $ cat some_config.conf
-      {
+        # config for cookieville
         inactive_timeout => 10,
         schema_class => 'My::Schema',
         connect_args => {
@@ -43,11 +33,22 @@ SYNOPSIS
           'dr_who',
           'MostS3cretpassWord',
         },
+
+        # config for hypnotoad - https://metacpan.org/pod/Mojo::Server::Hypnotoad
         hypnotoad => {
           listen => [ 'http://*:5000 ],
           workers => 10,
         },
       }
+
+    TIP: Give config file the file mode 0600 to protect your connect
+    passwords.
+
+    TIP: Run Cookieville with hypnotoad and enough workers in production.
+    Reason for this is that DBIx::Class is blocking, and therefor can only
+    handle one database opartion pr. worker. You might also want to tweak
+    "inactive_timeout" to prevent a worker from running a query for too
+    long.
 
 RESOURCES
     *   GET /
@@ -220,14 +221,14 @@ ATTRIBUTES
   connect_args
       $array_ref = $self->connect_args;
 
-    Looks in "$HOME/.cookieville" to find connect args for "schema_class".
-    See "SYNOPSIS" for details.
+    Looks in config to find connection arguments for "schema_class". See
+    "SYNOPSIS" for details.
 
   schema_class
       $class_name = $self->schema_class;
 
-    Returns the class name used to connect to the database. This defaults to
-    the environment variable "COOKIEVILLE_SCHEMA".
+    Looks in config to find the schema class to use. See "SYNOPSIS" for
+    details.
 
 HELPERS
   db

@@ -27,4 +27,4 @@ resources:
   homepage: https://metacpan.org/release/Cookieville
   license: http://dev.perl.org/licenses/
   repository: https://github.com/jhthorsen/cookieville.git
-version: 0.03
+version: 0.04

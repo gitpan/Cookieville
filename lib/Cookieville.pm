@@ -6,12 +6,15 @@ Cookieville - REST API for your database
 
 =head1 VERSION
 
-0.03
+0.04
 
 =head1 DESCRIPTION
 
 L<Cookieville> is a a web application which allow you to inspect and run
 queries on your SQL database using a REST interface.
+
+This distribution also contain L<Cookieville::Client> for easy blocking and
+non-blocking integration with the server.
 
 This application need a L<DBIx::Class> based L<schema|/schema_class> to work.
 It will query the result files on disk to gather meta information about the
@@ -21,27 +24,13 @@ THIS SERVER IS CURRENTLY EXPERIMENTAL AND WILL CHANGE WITHOUT ANY NOTICE.
 
 =head1 SYNOPSIS
 
-  $ COOKIEVILLE_SCHEMA="My::Schema" cookieville daemon --listen http://*:5000
+  $ MOJO_CONFIG=/path/to/mojo.conf cookieville daemon --listen http://*:5000
 
-Connection arguments will be read from C<$HOME/.cookieville>. Example:
+Example C<MOJO_CONFIG>:
 
-  $ cat $HOME/.cookieville
+  $ cat /path/to/mojo.conf
   {
-    'My::Schema' => [
-      'DBI:mysql:database=some_database;host=localhost',
-      'dr_who',
-      'MostS3cretpassWord',
-    ],
-  }
-
-TIP: Give C<.cookieville> the file mode 0600 to protect your passwords.
-
-It is also possible to specify config file using the C<MOJO_CONFIG>
-environment variable. This is also useful for setting up
-L<hypnotoad|Mojo::Server::Hypnotoad>:
-
-  $ cat some_config.conf
-  {
+    # config for cookieville
     inactive_timeout => 10,
     schema_class => 'My::Schema',
     connect_args => {
@@ -49,11 +38,21 @@ L<hypnotoad|Mojo::Server::Hypnotoad>:
       'dr_who',
       'MostS3cretpassWord',
     },
+
+    # config for hypnotoad - https://metacpan.org/pod/Mojo::Server::Hypnotoad
     hypnotoad => {
       listen => [ 'http://*:5000 ],
       workers => 10,
     },
   }
+
+TIP: Give config file the file mode 0600 to protect your connect passwords.
+
+TIP: Run L<Cookieville> with L<hypnotoad|Mojo::Server::Hypnotoad> and enough
+workers in production. Reason for this is that L<DBIx::Class> is blocking,
+and therefor can only handle one database opartion pr. worker. You might
+also want to tweak L</inactive_timeout> to prevent a worker from running
+a query for too long.
 
 =head1 RESOURCES
 
@@ -227,10 +226,9 @@ the first argument to L<DBIx::Class/search>.
 =cut
 
 use Mojo::Base 'Mojolicious';
-use File::HomeDir ();
 use File::Spec ();
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 ATTRIBUTES
 
@@ -246,15 +244,15 @@ C<COOKIEVILLE_INACTIVE_TIMEOUT> or 10 seconds.
 
   $array_ref = $self->connect_args;
 
-Looks in C<$HOME/.cookieville> to find connect args for L</schema_class>.
-See L</SYNOPSIS> for details.
+Looks in L<config|Mojo/config> to find connection arguments for
+L</schema_class>. See L</SYNOPSIS> for details.
 
 =head2 schema_class
 
   $class_name = $self->schema_class;
 
-Returns the class name used to connect to the database. This defaults to
-the environment variable C<COOKIEVILLE_SCHEMA>.
+Looks in L<config|Mojo/config> to find the schema class to use.
+See L</SYNOPSIS> for details.
 
 =cut
 
@@ -263,22 +261,11 @@ has inactive_timeout => sub {
 };
 
 has connect_args => sub {
-  my $self = shift;
-  my $config_file = File::Spec->catfile(File::HomeDir->my_home, '.cookieville');
-
-  unless(-r $config_file) {
-    return $self->config('connect_args') if $self->config('connect_args');
-    $self->log->debug("Could not read $config_file");
-    return [];
-  }
-
-  $config_file = do $config_file or die $@;
-  $self->log->debug("Looking for @{[$self->schema_class]} in $config_file");
-  return $config_file->{$self->schema_class} || [];
+  shift->config('connect_args') || [];
 };
 
 has schema_class => sub {
-  $ENV{COOKIEVILLE_SCHEMA} || shift->config('schema_class') || '';
+  shift->config('schema_class') || '';
 };
 
 =head1 HELPERS
